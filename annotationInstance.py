@@ -197,7 +197,7 @@ class annWind(QMainWindow,Ui_MainWindow):
         self.actionSelectFloader.triggered.connect(self.getFloader)
         self.actionSelectFile.triggered.connect(self.getFile)
         self.actionClose.triggered.connect(self.closeApp)
-
+        self.openVideo.triggered.connect(self.openvideo)
         self.confirmAndAnnocateButton.clicked.connect(self.confirmAndann)
         self.nextPicButton.clicked.connect(self.nextpic)
         #----------------------------------------------------
@@ -215,6 +215,37 @@ class annWind(QMainWindow,Ui_MainWindow):
                                                             # occlud:-1/1,perspect:0-frontal/1-side/2-tail, ]
         self.__index=1                                      # 给定文件夹下，加载当前图片的索引
         self.__imageFileCounts=0                            # 文件夹中图片文件的总数
+        self.__videoPath=""
+
+
+
+    def __write2images(self):
+        """
+
+        :return:
+        """
+        #获取转换为图片的目的地址
+        path = QFileDialog.getExistingDirectory(None, "请选择存储该视频帧序列的文件夹：")
+        print(path)
+        #将视频转换为图片
+        #调用图片处理方法
+
+    def openvideo(self):
+        """
+
+        :return:
+        """
+        self.__videoPath = QFileDialog.getOpenFileName(self, None, "选择文件", )[0]
+        filename = self.__videoPath
+        sufix = filename.split(".")[-1]
+        if sufix.lower() == "mov":
+            #此处获取了文件名称路径，开始读取视频
+            self.__write2images()
+            #QMessageBox.information(self, "通知", "成功选择文件"+filename, QMessageBox.Yes)
+        elif sufix == "":
+            pass
+        else:
+            QMessageBox.warning(self, "错误", "选择的文件类型错误！可接受*.mov类型文件！", QMessageBox.Yes)
 
     def confirmAndann(self):
         """
@@ -275,6 +306,10 @@ class annWind(QMainWindow,Ui_MainWindow):
         将本张图片的坐标信息存储下来，同时加载下一张照片
         :return:
         """
+        self.tailButton.setChecked(False)
+        self.sideButton.setChecked(False)
+        self.frontalButton.setChecked(False)
+
         # 判断文件夹是否已经选好以及文件夹中有无图片
         if len(self.__filelist) > 0 or self.__imagePath != "":
             # 获取并且清除缓存
@@ -449,13 +484,13 @@ class annWind(QMainWindow,Ui_MainWindow):
         self.__imagePath=QFileDialog.getOpenFileName(self,None,"选择文件",)[0]
         filename=self.__imagePath
         sufix=filename.split(".")[-1]
-        if(sufix.lower() =="jpg" or sufix.lower()=="jpeg" or sufix.lower()=="mov"):
+        if(sufix.lower() =="jpg" or sufix.lower()=="jpeg"):
             self.loadSingelImage()
             # QMessageBox.information(self, "通知", "成功选择文件"+filename, QMessageBox.Yes)
         elif sufix=="":
             pass
         else:
-            QMessageBox.warning(self, "错误", "选择的文件类型错误！可接受*.jpg,*.jpeg,*.mov类型文件！", QMessageBox.Yes)
+            QMessageBox.warning(self, "错误", "选择的文件类型错误！可接受*.jpg,*.jpeg类型文件！", QMessageBox.Yes)
 
 
 

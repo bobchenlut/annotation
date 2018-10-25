@@ -197,18 +197,25 @@
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>文件</string>
+     <string>图片处理</string>
     </property>
     <addaction name="actionSelectFloader"/>
     <addaction name="actionSelectFile"/>
     <addaction name="actionClose"/>
    </widget>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>视频处理</string>
+    </property>
+    <addaction name="openVideo"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSelectFloader">
    <property name="text">
-    <string>选择文件夹</string>
+    <string>打开图片文件夹</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
@@ -216,7 +223,7 @@
   </action>
   <action name="actionSelectFile">
    <property name="text">
-    <string>选择文件</string>
+    <string>打开图片</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
@@ -228,6 +235,14 @@
    </property>
    <property name="shortcut">
     <string>Esc</string>
+   </property>
+  </action>
+  <action name="openVideo">
+   <property name="text">
+    <string>打开视频</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+V</string>
    </property>
   </action>
  </widget>

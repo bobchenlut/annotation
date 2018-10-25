@@ -11,6 +11,7 @@ class XML:
         """
         self.__annPath=annpath
         self.__fileName=filename
+        self.__fileNameWithoutExt=filename.split(".")[0]
         self.__fullPath=""
         self.__outFlodar=""
         self.__outIndex=0           # 输出文件夹的序号，同时也是输出文件的名字
@@ -42,17 +43,14 @@ class XML:
         :return:
         """
         self.__fullPath=self.__annPath+"/"+self.__fileName
-        #print(self.__fullPath)
+
         #读取配置文件中的目的路径
         with open("annotation.cfg", "r") as f:
             self.__outFlodar = f.readline()
             self.__outIndex = len(os.listdir(self.__outFlodar+"/VOC/Annotations/"))
-            self.__xmlFileName = self.__outFlodar+"/VOC/Annotations/"+str(self.__outIndex).zfill(6)+".xml"
-            self.__outImageNameWithoutExt=self.__outFlodar+"/VOC/JPEGImages/"+str(self.__outIndex).zfill(6)
-            print(self.__xmlFileName)
-            print(self.__outImageNameWithoutExt)
-            # print(os.listdir(self.__outFlodar+"/VOC/Annotations/"))
-            # print(self.__outIndex)
+            self.__xmlFileName = self.__outFlodar+"/VOC/Annotations/"+self.__fileNameWithoutExt+".xml"
+            self.__outImageNameWithoutExt=self.__outFlodar+"/VOC/JPEGImages/"+self.__fileNameWithoutExt
+
 
 
 
@@ -67,8 +65,7 @@ class XML:
         :param picinfo:
         :return:
         """
-        print(posinfo)
-        print(picinfo)
+
 
         root = ET.Element("annotation")
         folder = ET.SubElement(root, "floder")
@@ -157,13 +154,13 @@ class XML:
                 flag=-1
             else:
                 flag=0
-            f.write(str(self.__outIndex).zfill(6)+"   "+str(flag)+"\n")
+            f.write(self.__fileNameWithoutExt+"\t"+str(flag)+"\n")
 
     def savePic(self,image):
         """
 
         :return:
         """
-        image.save(self.__outFlodar+"/VOC/JPEGImages/"+str(self.__outIndex).zfill(6)+".jpg","JPG",100)
+        image.save(self.__outFlodar+"/VOC/JPEGImages/"+self.__fileNameWithoutExt+".jpg","JPG",100)
 
-        shutil.move(self.__fullPath,self.__outFlodar+"/VOC/OriginalImages/"+str(self.__outIndex).zfill(6)+".jpg")
+        shutil.move(self.__fullPath,self.__outFlodar+"/VOC/OriginalImages/"+self.__fileName)
