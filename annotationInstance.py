@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt,QPoint,pyqtSignal
 import os
 import sys
 from XMLProcess import XML
-import platform
+
 import cv2 as cv
 
 IMAGE_W,IMAGE_H=761,581 #设置软件中显示的图片大小
@@ -353,15 +353,11 @@ class annWind(QMainWindow,Ui_MainWindow):
                 elif self.__imagePath != "":                    # 对于文件的操作
                     # 将文件信息写入对应的xml文件中去
                     # TODO：
+
                     spath=self.__imagePath
-                    if platform.uname()[0]=="Linux":
-                        fname=spath.split("/")[-1]
-                        fpath=spath.split("/")[0:-1]
-                        fpath="/".join(fpath)
-                    elif platform.uname()[0]=="Windows":
-                        fname = spath.split("\\")[-1]
-                        fpath = spath.split("\\")[0:-1]
-                        fpath = "/".join(fpath)
+                    fname=spath.split("/")[-1]
+                    fpath=spath.split("/")[0:-1]
+                    fpath="/".join(fpath)
 
                     xml=XML(fpath,fname)
                     xml.StoreInfo(posOfCurrent,picOutInfo)

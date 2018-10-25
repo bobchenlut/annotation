@@ -154,7 +154,7 @@ class XML:
                 flag=-1
             else:
                 flag=0
-            f.write(self.__fileNameWithoutExt+"\t"+str(flag)+"\n")
+            f.write(self.__fileNameWithoutExt+"\t\t"+str(flag)+"\n")
 
     def savePic(self,image):
         """
