@@ -81,6 +81,7 @@ class XML:
         frameNo = ET.SubElement(source, "frameIndex")
         frameNo.text = "0" # 如果是属于视频的，则在这里写上FrameNumber。
 
+        self.__imageFlag=None   # 默认为负样本，只要图片中出现了属兔，则为正样本，
 
         for i in range(len(posinfo)):
             obj = ET.SubElement(root, "object")
@@ -93,10 +94,9 @@ class XML:
             #标记样本为正负样本，-1为背景
             if inf[0]=="rats":
                 self.__imageFlag=True
-            elif inf[0]=="others":
-                self.__imageFlag=False
-            else:
+            elif inf[0]=="non":
                 self.__imageFlag=-1
+
 
             trunc = ET.SubElement(obj, "truncated")
             if inf[1]==1:
@@ -154,7 +154,7 @@ class XML:
                 flag=-1
             else:
                 flag=0
-            f.write(self.__fileNameWithoutExt+"\t"+str(flag)+"\n")
+            f.write(self.__fileNameWithoutExt+"\t\t"+str(flag)+"\n")
 
     def savePic(self,image):
         """

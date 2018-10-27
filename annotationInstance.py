@@ -1,14 +1,15 @@
 from annotation import Ui_MainWindow
 from PyQt5.QtWidgets import QApplication,QMainWindow,QMessageBox,QGraphicsView,QGraphicsPixmapItem,QFileDialog,QGraphicsScene,QStyleOptionGraphicsItem
 from PyQt5.QtGui import QPixmap,QImage,QPainter,QBrush,QPen,QColor
-from PyQt5.QtCore import Qt,QPoint,pyqtSignal
+from PyQt5.QtCore import Qt,QPoint,pyqtSignal,QThread
 import os
 import sys
 from XMLProcess import XML
-import platform
+
+
 import cv2 as cv
 
-IMAGE_W,IMAGE_H=761,581 #设置软件中显示的图片大小
+IMAGE_W,IMAGE_H=871,489 #设置软件中显示的图片大小   #761,581
 
 distFloader=""
 res=False
@@ -164,24 +165,84 @@ class GraphicsPixItem(QGraphicsPixmapItem):
 
 
 class Graphicscene(QGraphicsScene):
+    """
+    绘图相关的类
+    """
     def __init__(self,parent=None):
         super(Graphicscene,self).__init__(parent)
     # def mousePressEvent(self, QGraphicsSceneMouseEvent):
     #     Graphicscene.mouseMoveEvent(self,QGraphicsSceneMouseEvent)
 
-#
-# class GraphicView(QGraphicsView):
-#     def __init__(self,parent=None):
-#         super(GraphicView,self).__init__(parent)
-#
-#
-#     def focusInEvent(self, QFocusEvent):
-#         print("focesed")
-#     def mousePressEvent(self, QMouseEvent):
-#         print("mousepress",QMouseEvent.x(),QMouseEvent.y())
-#     # def mouseMoveEvent(self, QMouseEvent):
-#     #     print(QMouseEvent.x(),QMouseEvent.y())
-#
+
+
+
+class VideoThread(QThread):
+    """
+    处理视屏的线程类
+    """
+    def __init__(self,parent=None):
+        super(VideoThread,self).__init__(parent)
+        self.__dist_path=""
+        self.__filename=""
+        self.__videoPath=""
+        self.__frameCount=0             #总总帧数
+        self.__currentFrameIndex=0
+
+
+    def run(self):
+        """
+        此处编写视屏处理的业务逻辑
+        :return:
+        """
+
+        # 调用图片处理方法
+
+
+        cap = cv.VideoCapture(self.__videoPath)
+        self.__frameCount=cap.get(cv.CAP_PROP_FRAME_COUNT)
+
+        cwd = os.getcwd()
+        if not os.path.exists(self.__dist_path):
+            os.makedirs(self.__dist_path)
+
+        os.chdir(self.__dist_path)
+
+        while (cap.isOpened()):
+            ret, frame = cap.read()
+            cv.imwrite(self.__filename+"_"+str(self.__currentFrameIndex)+".jpg",frame)
+            # print(self.__dist_path + self.__filename + "_" + str(self.__currentFrameIndex) + ".jpg")
+
+            self.__currentFrameIndex= self.__currentFrameIndex + 1
+            percent=(self.__currentFrameIndex/self.__frameCount)*100
+            self.__progressBar.setProperty("value",percent)
+
+            if self.__currentFrameIndex>=self.__frameCount:
+                break
+
+        os.chdir(cwd)
+        cap.release()
+
+        return
+
+    def getfilenames(self,dist_path,filename,videopath):
+        """
+        获取文件名称以及路径
+        :param dist_path:
+        :param filename:
+        :return:
+        """
+        self.__dist_path=dist_path
+        self.__filename=filename
+        self.__videoPath=videopath
+
+    def getProgressEntery(self,progressbar):
+        """
+        获取progressBar
+        :param progressBar:
+        :return:
+        """
+        self.__progressBar=progressbar
+
 
 
 
@@ -189,6 +250,9 @@ class Graphicscene(QGraphicsScene):
 
 
 class annWind(QMainWindow,Ui_MainWindow):
+    """
+    主窗口的工作类，主要为业务逻辑
+    """
     def __init__(self,parent=None):
         super(annWind,self).__init__(parent)
         self.setupUi(self)
@@ -216,23 +280,35 @@ class annWind(QMainWindow,Ui_MainWindow):
         self.__index=1                                      # 给定文件夹下，加载当前图片的索引
         self.__imageFileCounts=0                            # 文件夹中图片文件的总数
         self.__videoPath=""
+        self.__videoThread=VideoThread()                    # 处理视屏的工作线程
+
+
 
 
 
     def __write2images(self):
         """
-
+        把视屏的每一帧写到特定的文件夹中
         :return:
         """
-        #获取转换为图片的目的地址
-        path = QFileDialog.getExistingDirectory(None, "请选择存储该视频帧序列的文件夹：")
-        print(path)
-        #将视频转换为图片
-        #调用图片处理方法
+        self.infoTextBrowser.append("处理视屏中....")
+        # 将视频转换为图片,并且放在视屏目录下
+        dist_path =self.__videoPath.split(".")[0]+"/"
+        filename=dist_path.split("/")[-2]
+        #print(dist_path,filename)
+        self.__videoThread.getfilenames(dist_path,filename,self.__videoPath)
+        self.__videoThread.getProgressEntery(self.progressBar)  #控制进度条
+        self.__videoThread.start()
+
+
+
+
+
+
 
     def openvideo(self):
         """
-
+        打开一个视屏文件
         :return:
         """
         self.__videoPath = QFileDialog.getOpenFileName(self, None, "选择文件", )[0]
@@ -246,6 +322,11 @@ class annWind(QMainWindow,Ui_MainWindow):
             pass
         else:
             QMessageBox.warning(self, "错误", "选择的文件类型错误！可接受*.mov类型文件！", QMessageBox.Yes)
+
+
+
+
+
 
     def confirmAndann(self):
         """
@@ -353,15 +434,11 @@ class annWind(QMainWindow,Ui_MainWindow):
                 elif self.__imagePath != "":                    # 对于文件的操作
                     # 将文件信息写入对应的xml文件中去
                     # TODO：
+
                     spath=self.__imagePath
-                    if platform.uname()[0]=="Linux":
-                        fname=spath.split("/")[-1]
-                        fpath=spath.split("/")[0:-1]
-                        fpath="/".join(fpath)
-                    elif platform.uname()[0]=="Windows":
-                        fname = spath.split("\\")[-1]
-                        fpath = spath.split("\\")[0:-1]
-                        fpath = "/".join(fpath)
+                    fname=spath.split("/")[-1]
+                    fpath=spath.split("/")[0:-1]
+                    fpath="/".join(fpath)
 
                     xml=XML(fpath,fname)
                     xml.StoreInfo(posOfCurrent,picOutInfo)
@@ -389,6 +466,8 @@ class annWind(QMainWindow,Ui_MainWindow):
 
 
 
+
+
     def showImage(self,pixmap):
         """
         给函数一个Qimage对象，他在GraphicView的scene中显示出来
@@ -404,21 +483,44 @@ class annWind(QMainWindow,Ui_MainWindow):
         self.graphicsView.show()
 
 
+
+
+
     def loadImage(self,index):
         '''
         在所选目录中加载给定目录的图片
         :index:目录中的图片索引
         :return:
         '''
-        #first,check the path and files.
+
+        # first,check the path and files.
         if len(self.__filelist)>0:
-            #load image.
+            # load image.
             self.__image.load(self.__datafloderPath+"/"+self.__filelist[index-1])
+            # 获取原始图片大小,并且按照比例缩小
+            self.__setWindWH()
             self.__image=self.__image.scaled(IMAGE_W,IMAGE_H,Qt.IgnoreAspectRatio,Qt.SmoothTransformation)
-            self.__pixmap=QPixmap.fromImage(self.__image) #转换为Pixmap对象
+            self.__pixmap=QPixmap.fromImage(self.__image)                   # 转换为Pixmap对象
             self.showImage(self.__pixmap)
             self.__isPicloaded=True
             self.infoTextBrowser.append("载入第"+str(index)+"张图片："+self.__filelist[index-1])
+
+
+
+
+    def __setWindWH(self):
+        """
+        按照图像原来比例放缩到与窗口合适的尺寸,在装载了图像之后使用
+        :return:
+        """
+        global IMAGE_W,IMAGE_H
+        originWidth = self.__image.width()
+        orighnHeight = self.__image.height()
+        windWidth = self.verticalLayout_4.geometry().width()
+        windHeight = self.verticalLayout_4.geometry().height()
+        IMAGE_H = (windWidth * orighnHeight) / originWidth
+        IMAGE_W = windWidth
+        # print(windWidth,windHeight)
 
 
     def loadSingelImage(self):
@@ -430,11 +532,15 @@ class annWind(QMainWindow,Ui_MainWindow):
             pass
         else:
             self.__image.load(self.__imagePath)
+            self.__setWindWH()
             self.__image = self.__image.scaled(IMAGE_W, IMAGE_H, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
             self.__pixmap = QPixmap.fromImage(self.__image)  # 转换为Pixmap对象
             self.showImage(self.__pixmap)
             self.__isPicloaded = True
             self.infoTextBrowser.append("载入图片："+self.__imagePath)
+
+
+
 
 
     def getFloader(self):
@@ -475,6 +581,10 @@ class annWind(QMainWindow,Ui_MainWindow):
 
 
 
+
+
+
+
     def getFile(self):
         '''
         here,we get files' path.
@@ -494,6 +604,9 @@ class annWind(QMainWindow,Ui_MainWindow):
 
 
 
+
+
+
     def closeApp(self):
         '''
         Exit the process.
@@ -504,6 +617,13 @@ class annWind(QMainWindow,Ui_MainWindow):
             self.close()
         else:
             pass
+
+
+
+
+
+
+
 
 
 
