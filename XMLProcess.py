@@ -137,7 +137,7 @@ class XML:
 
         tree = ET.ElementTree(root)
         #print(self.__xmlFileName)
-        tree.write(self.__xmlFileName)
+        tree.write(self.__xmlFileName,encoding="utf-8",xml_declaration=True)
         # xml文件操作完毕
         self.__dealtext()
 
